@@ -7,7 +7,7 @@ class Qwen25VL72BInstruct:
 class Qwen3_235B_A22B:
     def __init__(self):
         self.model = "Qwen/Qwen3-235B-A22B"
-        self.api_key = "16a177c8-8cec-4ea2-98ae-df25ba79e6ec"
+        self.api_key = "Your own modelscope api-key"
         self.api_base = "https://api-inference.modelscope.cn/v1/"
 
 class GPT41:
