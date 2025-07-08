@@ -6,7 +6,7 @@ from PIL import Image
 import numpy as np
 import streamlit as st
 import cohere
-from google import genai
+import google.generativeai as genai
 import fitz # PyMuPDF
 from typing import List, Dict, Tuple
 from collections import defaultdict
