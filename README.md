@@ -62,6 +62,8 @@ pip install -r requirements.txt
 ```
 
 3. **获取 API 密钥**
+   Qwen3密钥目前从ModelScope获取免费试用，需要替换utils/apis.py中的api key.
+   - [Qwen3 API 密钥](https://www.modelscope.cn/models/Qwen/Qwen3-235B-A22B)
    - [Cohere API 密钥](https://dashboard.cohere.com/api-keys)
    - [Google API 密钥](https://aistudio.google.com/app/apikey)
 
