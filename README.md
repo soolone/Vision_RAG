@@ -1,52 +1,77 @@
-# Vision RAG 🖼️
+# Vision RAG System
 
-一个基于多模态嵌入的视觉检索增强生成系统，支持图片和PDF文档的智能问答。
+一个基于多模态RAG（检索增强生成）技术的智能文档问答系统，支持PDF、图片、Office文档等多种格式的文档解析、向量化存储和智能问答。
 
-## ✨ 特性
+## 🌟 主要特性
 
-- 🔍 **多模态检索**：使用 Cohere Embed-4 进行图片和文本的联合嵌入
-- 📄 **PDF 支持**：自动提取PDF页面并转换为可搜索的图片
-- 🤖 **智能查询扩展**：基于 Qwen3-235B-A22B 的查询优化和多变体生成
-- 🔄 **RRF 融合算法**：采用 Reciprocal Rank Fusion 提升检索精度
-- 💬 **多图片问答**：使用 Google Gemini 2.5 Flash 基于多张相关图片生成综合答案
-- 🎯 **实时处理**：支持批量文件上传和实时嵌入计算
-- 🎨 **直观界面**：基于 Streamlit 的用户友好界面
+### 📄 多格式文档支持
+- **PDF文档**: 支持复杂PDF的解析，包括文本、图片、表格、公式等
+- **图片文件**: 支持JPG、PNG、BMP、TIFF、WebP等格式
+- **Office文档**: 支持Word (.docx, .doc)、PowerPoint (.pptx, .ppt)、Excel (.xlsx, .xls)
+- **自动格式识别**: 智能识别文件类型并选择最佳解析策略
+
+### 🤖 智能解析与处理
+- **MinerU 2.0集成**: 使用先进的文档解析引擎，精确提取文档结构
+- **多模态内容提取**: 同时处理文本、图片、表格、公式等多种内容类型
+- **智能切片**: 基于语义边界的智能文档切片，保持内容完整性
+- **自动图片描述**: 使用视觉语言模型自动生成图片描述
+
+### 🔍 高效检索系统
+- **多模态嵌入**: 使用通义千问多模态嵌入模型，支持文本和图像的统一向量化
+- **ChromaDB存储**: 高性能向量数据库，支持大规模文档存储和快速检索
+- **查询扩写**: 智能查询扩写功能，提高检索准确性
+- **混合检索**: 支持文本检索、图像检索和多查询融合检索
+
+### 💬 智能问答
+- **多模态理解**: 基于通义千问视觉语言模型，理解文本和图像内容
+- **上下文感知**: 结合检索到的相关内容，提供准确的答案
+- **引用标注**: 自动标注答案来源，提高可信度
+- **流式输出**: 支持实时流式回答，提升用户体验
 
 ## 🏗️ 系统架构
 
 ### 核心组件
 
-1. **嵌入生成器** (`compute_image_embedding`)
-   - 使用 Cohere Embed-4 模型
-   - 支持图片的高质量向量化表示
-   - 自动图片尺寸优化（最大 1568×1568 像素）
+```
+Vision RAG System
+├── 📁 agent/                    # 智能代理模块
+│   ├── data_agent.py           # 文档解析代理
+│   ├── chunk_agent.py          # 文档切片代理
+│   ├── chromadb_agent.py       # 向量数据库代理
+│   ├── qwen_embedding.py       # 通义千问嵌入代理
+│   ├── query_agent.py          # 查询扩写代理
+│   ├── answer_agent.py         # 问答代理
+│   └── caption_agent.py        # 图片描述代理
+├── 📁 utils/                    # 工具模块
+│   ├── apis.py                 # API配置
+│   └── mineru_parser.py        # MinerU解析器
+├── 📁 data/                     # 数据目录
+│   ├── doc_data/               # 原始文档
+│   ├── image_data/             # 图片数据
+│   └── output/                 # 解析输出
+├── vision_rag_qwen.py          # 主应用程序（通义千问版本）
+├── vision_rag.py               # 主应用程序（Cohere版本）
+└── requirements.txt            # 依赖配置
+```
 
-2. **PDF 处理器** (`process_pdf_file`)
-   - 基于 PyMuPDF 的页面提取
-   - 150 DPI 高质量渲染
-   - 批量页面嵌入生成
+### 数据流程
 
-3. **查询扩展代理** (`QueryExpansionAgent`)
-   - 智能生成 3-5 个英文查询变体
-   - 语义多样化和同义词扩展
-   - 针对视觉内容优化的查询重写
-
-4. **多查询检索系统**
-   - **单查询模式**：传统余弦相似度检索
-   - **多查询融合模式**：RRF 算法融合多个查询结果
-   - 可配置返回结果数量（1-10个）
-
-5. **多模态问答引擎** (`answer_multiple`)
-   - Google Gemini 2.5 Flash 驱动
-   - 综合分析多张图片内容
-   - 中文优化的回答生成
+1. **文档上传** → 用户上传各种格式的文档
+2. **智能解析** → DataAgent使用MinerU解析文档结构和内容
+3. **内容切片** → ChunkAgent将解析结果切分为语义完整的片段
+4. **向量化** → QwenEmbedding将文本和图像转换为向量表示
+5. **存储索引** → ChromaDBAgent将向量存储到数据库中
+6. **查询处理** → QueryAgent对用户查询进行扩写和优化
+7. **相似检索** → 在向量数据库中检索相关内容
+8. **智能问答** → AnswerAgent基于检索结果生成答案
 
 ## 🚀 快速开始
 
 ### 环境要求
 
 - Python 3.8+
-- 所需依赖包（见 requirements.txt）
+- 8GB+ RAM（推荐16GB+）
+- GPU支持（可选，用于加速推理）
 
 ### 安装步骤
 
@@ -61,184 +86,177 @@ cd Vision_RAG
 pip install -r requirements.txt
 ```
 
-3. **获取 API 密钥**
-   Qwen3密钥目前从ModelScope获取免费试用，需要替换utils/apis.py中的api key.
-   - [Qwen3 API 密钥](https://www.modelscope.cn/models/Qwen/Qwen3-235B-A22B)
-   - [Cohere API 密钥](https://dashboard.cohere.com/api-keys)
-   - [Google API 密钥](https://aistudio.google.com/app/apikey)
+3. **安装MinerU**
 
-4. **启动应用**
+建议参考 [MinerU官方文档](https://github.com/opendatalab/MinerU) 进行安装，以获取最新的安装指南和依赖要求。
+
 ```bash
+# 安装MinerU核心组件
+pip install -U 'mineru[core]'
+
+# 如果需要GPU加速
+pip install -U 'mineru[core,gpu]'
+```
+
+4. **配置API密钥**
+
+⚠️ **重要**: 在正常使用前，您必须将 `utils/apis.py` 文件中的所有API密钥替换为您自己的有效密钥。
+
+编辑 `utils/apis.py` 文件，配置相应的API密钥：
+- **通义千问API密钥**: 替换 `"your modelscope api"` 为您的ModelScope API密钥（用于嵌入和问答）
+- **Cohere API密钥**: 替换 `"your cohere api"` 为您的Cohere API密钥（可选，用于Cohere版本）
+- **Google Gemini API密钥**: 替换 `"your google ai studio api"` 为您的Google AI Studio API密钥（可选，用于Gemini版本）
+- **其他API密钥**: 根据需要配置其他服务的API密钥
+
+示例配置：
+```python
+class Qwen25VL72BInstruct:
+    def __init__(self):
+        self.model = "Qwen/Qwen2.5-VL-72B-Instruct"
+        self.api_key = "your_actual_modelscope_api_key_here"  # 替换为实际密钥
+        self.api_base = "https://api-inference.modelscope.cn/v1/"
+```
+
+### 启动应用
+
+```bash
+# 启动通义千问版本（推荐）
+streamlit run vision_rag_qwen.py
+
+# 或启动Cohere版本
 streamlit run vision_rag.py
 ```
 
-### 使用流程
+应用将在 `http://localhost:8501` 启动。
 
-1. **配置 API 密钥**
-   - 在侧边栏输入 Cohere 和 Google API 密钥
+## 📖 使用指南
 
-2. **上传文件**
-   - 支持格式：PNG, JPG, JPEG, PDF
-   - 可批量上传多个文件
-   - PDF 自动按页面拆分处理
+### 1. 文档上传与解析
 
-3. **配置检索参数**
-   - 启用/禁用查询扩展
-   - 设置返回结果数量（1-10）
+1. 在侧边栏选择"📄 文档解析"选项卡
+2. 上传支持的文档格式（PDF、图片、Office文档）
+3. 配置解析参数：
+   - 语言设置（中文/英文）
+   - 启用公式解析
+   - 启用表格解析
+   - 自动图片描述
+4. 点击"开始解析"按钮
+5. 查看解析结果和统计信息
 
-4. **提问和获取答案**
-   - 输入关于图片内容的问题
-   - 系统自动检索相关图片
-   - 生成基于多图片的综合答案
+### 2. 知识库管理
 
-## 🔧 技术细节
+1. 在"📚 知识库管理"选项卡中查看已解析的文档
+2. 浏览文档切片，包括文本、图片、表格等
+3. 管理文档：删除不需要的文档或切片
+4. 查看数据库统计信息
 
-### 工作流程
+### 3. 智能问答
 
-```mermaid
-graph TD
-    A[用户上传文件] --> B{文件类型}
-    B -->|图片| C[图片预处理]
-    B -->|PDF| D[PDF页面提取]
-    C --> E[Cohere Embed-4 嵌入]
-    D --> E
-    E --> F[向量存储]
-    
-    G[用户查询] --> H{查询扩展}
-    H -->|启用| I[Qwen3 查询扩展]
-    H -->|禁用| J[原始查询]
-    I --> K[多查询检索]
-    J --> L[单查询检索]
-    
-    K --> M[RRF 融合排序]
-    L --> M
-    F --> M
-    M --> N[Top-K 图片]
-    N --> O[Gemini 2.5 Flash 问答]
-    O --> P[综合答案]
-```
+1. 在主界面输入问题
+2. 系统自动检索相关内容
+3. 查看智能生成的答案和引用来源
+4. 浏览检索到的相关图片和文档片段
 
-### 核心算法
+### 4. 高级功能
 
-#### 1. Reciprocal Rank Fusion (RRF)
+- **查询扩写**: 系统自动扩写短查询，提高检索准确性
+- **多模态检索**: 同时检索文本和图像内容
+- **相似度调节**: 调整检索结果的相似度阈值
+- **批量处理**: 支持批量上传和处理多个文档
+
+## ⚙️ 配置说明
+
+### 解析配置
+
 ```python
-def reciprocal_rank_fusion(rankings, k=60):
-    rrf_scores = defaultdict(float)
-    for ranking in rankings:
-        for rank, (doc_idx, _) in enumerate(ranking):
-            rrf_scores[doc_idx] += 1.0 / (k + rank + 1)
-    return sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)
+@dataclass
+class VisionRAGConfig:
+    # 数据解析配置
+    output_dir: str = "data/output"  # 解析输出目录
+    cls_dir: str = "default"         # 知识库分类目录
+    lang: str = "ch"                 # 解析语言
+    enable_formula: bool = True      # 启用公式解析
+    enable_table: bool = True        # 启用表格解析
+    auto_caption: bool = True        # 自动生成图片描述
+    
+    # 切片配置
+    max_chunk_size: int = 1000       # 最大切片大小
+    min_chunk_size: int = 100        # 最小切片大小
+    overlap_size: int = 100          # 重叠大小
+    preserve_sentences: bool = True  # 保持句子完整性
+    preserve_paragraphs: bool = True # 保持段落完整性
 ```
 
-#### 2. 余弦相似度检索
-```python
-cos_sim_scores = np.dot(query_emb, embeddings.T)
-top_indices = np.argsort(cos_sim_scores)[::-1][:top_k]
-```
+### API配置
 
-### 模型配置
+在 `utils/apis.py` 中配置各种API密钥和端点：
 
-- **嵌入模型**：Cohere Embed-4 (多模态)
-- **查询扩展**：Qwen3-235B-A22B
-- **问答模型**：Google Gemini 2.5 Flash Preview
-- **PDF 处理**：PyMuPDF (150 DPI)
+- **Qwen25VL72BInstruct**: 通义千问视觉语言模型
+- **Qwen3_235B_A22B**: 通义千问大语言模型
+- **AliBailian_API**: 阿里百炼API
+- **Cohere_API**: Cohere API
+- **Google_API**: Google Gemini API
 
-## 📁 项目结构
+## 🔧 技术栈
 
-```
-Vision_RAG/
-├── vision_rag.py           # 主应用程序
-├── requirements.txt        # 依赖包列表
-├── README.md              # 项目文档
-├── agent/                 # 智能代理模块
-│   ├── query_agent.py     # 查询扩展代理
-│   └── answer_agent.py    # 答案生成代理
-├── utils/                 # 工具模块
-│   └── apis.py           # API 配置管理
-├── pdf_pages/            # PDF 页面存储目录
-└── uploaded_img/         # 上传图片存储目录
-```
+### 核心技术
 
-## ⚙️ 配置选项
+- **[MinerU 2.0](https://github.com/opendatalab/MinerU)**: 先进的文档解析引擎
+- **[ChromaDB](https://www.trychroma.com/)**: 高性能向量数据库
+- **[LangChain](https://langchain.com/)**: LLM应用开发框架
+- **[LangGraph](https://langchain-ai.github.io/langgraph/)**: 工作流编排框架
+- **[Streamlit](https://streamlit.io/)**: Web应用框架
 
-### 侧边栏设置
+### AI模型
 
-- **API 密钥配置**
-  - Cohere API 密钥（必需）
-  - Google API 密钥（必需）
+- **通义千问多模态嵌入**: 文本和图像的统一向量化
+- **通义千问视觉语言模型**: 多模态理解和问答
+- **Cohere Embed-4**: 企业级多模态嵌入模型（可选）
+- **Google Gemini**: 多模态大语言模型（可选）
 
-- **高级设置**
-  - 查询扩展开关
-  - 返回结果数量（1-10）
+## 📁 重要文件说明
 
-### 查询扩展配置
+### `/utils/mineru_parser.py`
 
-在 `agent/query_agent.py` 中可调整：
-- 温度参数（creativity）
-- 最大 token 数
-- 查询变体数量
+本文件来源于 [RAG-Anything项目](https://github.com/HKUDS/RAG-Anything/blob/main/raganything/mineru_parser.py)，是MinerU文档解析器的封装工具，提供了统一的文档解析接口。
 
-## 🎯 使用场景
+**主要功能**:
+- PDF文档解析
+- 图像文档解析  
+- 结构化数据提取
+- Markdown和JSON格式输出
 
-- **学术研究**：论文图表分析和解释
-- **技术文档**：架构图和流程图问答
-- **教育培训**：图片内容的详细讲解
-- **商业分析**：图表数据的智能解读
-- **医疗影像**：医学图片的辅助分析
-
-## 🔍 示例查询
-
-- "给我讲解下transformer模型的结构"
-- "这个架构图中的各个组件是如何连接的？"
-- "图表中显示的数据趋势是什么？"
-- "这个流程图的主要步骤有哪些？"
-- "解释一下这个神经网络的工作原理"
-
-## 🚨 注意事项
-
-1. **API 密钥安全**：请妥善保管您的 API 密钥，不要在代码中硬编码
-2. **文件大小限制**：大型 PDF 文件可能需要较长处理时间
-3. **图片质量**：建议上传清晰、高质量的图片以获得更好的检索效果
-4. **网络连接**：需要稳定的网络连接以访问 API 服务
-
-## 🛠️ 故障排除
-
-### 常见问题
-
-1. **API 密钥错误**
-   - 检查密钥是否正确输入
-   - 确认密钥权限和配额
-
-2. **文件上传失败**
-   - 检查文件格式是否支持
-   - 确认文件大小合理
-
-3. **查询扩展失败**
-   - 系统会自动回退到原始查询模式
-   - 检查网络连接状态
-
-4. **嵌入生成失败**
-   - 检查图片文件是否损坏
-   - 确认 Cohere API 服务状态
-
-## 📈 性能优化
-
-- **缓存机制**：图片嵌入结果自动缓存 1 小时
-- **批量处理**：支持多文件并行处理
-- **内存管理**：大图片自动压缩至合适尺寸
-- **会话状态**：智能管理上传文件和嵌入向量
+**使用许可**: 请遵循原项目的开源许可证
 
 ## 🤝 贡献指南
 
-欢迎提交 Issue 和 Pull Request 来改进项目！
+欢迎贡献代码、报告问题或提出改进建议！
+
+1. Fork 本项目
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启 Pull Request
 
 ## 📄 许可证
 
-本项目采用 MIT 许可证。
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
 
 ## 🙏 致谢
 
-- [Cohere](https://cohere.com/) - 提供强大的多模态嵌入模型
-- [Google](https://ai.google.dev/) - 提供 Gemini 多模态大语言模型
-- [Streamlit](https://streamlit.io/) - 提供优秀的 Web 应用框架
-- [PyMuPDF](https://pymupdf.readthedocs.io/) - 提供 PDF 处理能力
+- [MinerU](https://github.com/opendatalab/MinerU) - 优秀的文档解析引擎
+- [RAG-Anything](https://github.com/HKUDS/RAG-Anything) - MinerU解析器封装
+- [ChromaDB](https://www.trychroma.com/) - 高性能向量数据库
+- [LangChain](https://langchain.com/) - LLM应用开发框架
+- [Streamlit](https://streamlit.io/) - 简洁的Web应用框架
+
+## 📞 联系方式
+
+如有问题或建议，请通过以下方式联系：
+
+- 提交 [Issue](../../issues)
+- 发起 [Discussion](../../discussions)
+
+---
+
+**Vision RAG System** - 让文档智能化，让知识触手可及！ 🚀

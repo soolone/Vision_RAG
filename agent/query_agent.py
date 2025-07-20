@@ -21,7 +21,7 @@ class QueryExpansionAgent:
             openai_api_base=qwen_config.api_base,
             openai_api_key=qwen_config.api_key,
             model_name=qwen_config.model,
-            temperature=0.3,  # 稍微提高创造性以生成多样化的查询
+            temperature=0.6,  # 稍微提高创造性以生成多样化的查询
             max_tokens=1000,
             streaming=False,
             extra_body={
@@ -51,6 +51,39 @@ Example input: "给我讲解下transformer模型的结构"
 Example output: ["explain transformer model architecture structure", "transformer neural network components diagram", "attention mechanism in transformer models", "encoder decoder transformer design", "transformer block structure visualization"]
 
 Now process the user query:
+"""
+        
+        # 自动扩写系统提示
+        self.auto_expand_prompt = """
+You are an expert query expansion specialist. Your CRITICAL task is to expand short user queries to make them more detailed and comprehensive while preserving the original intent.
+
+🚨 ABSOLUTE REQUIREMENT: The expanded query MUST be at least the specified minimum character count. This is NON-NEGOTIABLE.
+
+Given a short user query and a target minimum length, you must:
+1. Expand the query to reach AT LEAST the specified target length while maintaining the original meaning
+2. Add relevant context, synonyms, and related concepts
+3. Keep the expanded query natural and coherent
+4. Preserve the original language of the input
+5. Focus on the core intent of the original query
+6. ENSURE the expanded query meets or exceeds the minimum character count requirement
+7. If the expansion is still too short, add more descriptive details, examples, or context until the target length is reached
+
+CRITICAL REQUIREMENTS:
+- Maintain the same language as the input query
+- The expanded query MUST be at least the specified minimum length in characters - THIS IS MANDATORY
+- The expanded query should be natural and readable
+- Do not change the fundamental meaning or intent
+- Add helpful context and details that would improve search results
+- Return ONLY the expanded query text, no additional formatting
+- Keep expanding with relevant details until you reach the minimum character count
+- Count characters carefully and ensure you meet the requirement
+
+Example input: "transformer结构" (target: 50+ characters)
+Example output: "请详细解释transformer模型的整体架构结构，包括编码器和解码器的组成部分，注意力机制的工作原理，以及各个模块之间的连接关系和数据流向，并说明每个组件的具体功能和作用机制"
+
+IMPORTANT: Before responding, mentally count the characters in your expansion to ensure it meets the minimum requirement.
+
+Now expand the following query to meet the minimum length requirement:
 """
     
     async def expand_query(self, original_query: str) -> List[str]:
@@ -100,6 +133,69 @@ Now process the user query:
         except Exception as e:
             print(f"Query expansion error: {e}")
             return [original_query]  # 返回原查询作为fallback
+    
+    async def auto_expand_query(self, original_query: str, min_length: int = 50) -> str:
+        """自动扩写查询，当查询长度少于指定字数时进行扩写
+        
+        Args:
+            original_query: 原始用户查询
+            min_length: 最小字数要求，默认50字
+            
+        Returns:
+            扩写后的查询（如果需要扩写）或原始查询
+        """
+        # 检查查询长度是否需要扩写
+        if len(original_query) >= min_length:
+            print(f"Query already meets minimum length: {len(original_query)} >= {min_length}")
+            return original_query
+        
+        print(f"Query needs expansion: {len(original_query)} < {min_length}")
+        
+        # 最多尝试3次扩写
+        for attempt in range(3):
+            try:
+                # 构建消息，每次尝试都强调要求
+                emphasis = "🚨 CRITICAL: " if attempt > 0 else ""
+                retry_note = f" (Attempt {attempt + 1}/3 - Previous attempts were too short!)" if attempt > 0 else ""
+                
+                messages = [
+                    SystemMessage(content=self.auto_expand_prompt),
+                    HumanMessage(content=f"{emphasis}ABSOLUTE REQUIREMENT: The expanded query MUST be at least {min_length} characters long{retry_note}.\n\nTarget minimum length: {min_length} characters\nCurrent query length: {len(original_query)} characters\nOriginal query: {original_query}\n\nYou MUST expand this query to reach AT LEAST {min_length} characters while preserving the original meaning and language. Count the characters in your response to ensure it meets the requirement.")
+                ]
+                
+                # 调用LLM
+                response = await self.llm.ainvoke(messages)
+                expanded_query = response.content.strip()
+                
+                # 验证扩写结果
+                actual_length = len(expanded_query.strip())
+                print(f"Attempt {attempt + 1}: Generated {actual_length} characters (target: {min_length}+)")
+                
+                if expanded_query and actual_length >= min_length:
+                    print(f"✅ Auto expansion successful: {actual_length} characters")
+                    print(f"Expanded query: {expanded_query[:100]}{'...' if len(expanded_query) > 100 else ''}")
+                    return expanded_query.strip()
+                else:
+                    print(f"❌ Attempt {attempt + 1} failed: {actual_length} < {min_length}")
+                    print(f"Result: {expanded_query[:100]}{'...' if len(expanded_query) > 100 else ''}")
+                    
+            except Exception as e:
+                print(f"Auto expansion error on attempt {attempt + 1}: {e}")
+        
+        print(f"⚠️ All expansion attempts failed, returning original query")
+        return original_query
+    
+    def auto_expand_query_sync(self, original_query: str, min_length: int = 50) -> str:
+        """同步版本的自动扩写查询
+        
+        Args:
+            original_query: 原始用户查询
+            min_length: 最小字数要求，默认50字
+            
+        Returns:
+            扩写后的查询（如果需要扩写）或原始查询
+        """
+        return asyncio.run(self.auto_expand_query(original_query, min_length))
     
     def expand_query_sync(self, original_query: str) -> List[str]:
         """同步版本的查询扩写

@@ -1,8 +1,29 @@
+# Web框架
 streamlit>=1.32.0
+
+# AI模型和API
 cohere>=5.0.0
-google-generativeai>=0.3.0
+google-generativeai>=0.5.0
+dashscope>=1.14.0
+langchain-openai>=0.1.0
+langchain-core>=0.2.0
+langgraph>=0.1.0
+
+# 图像处理
 Pillow>=10.0.0
-requests>=2.31.0
+
+# 数据处理
 numpy>=1.24.0
+requests>=2.31.0
 tqdm>=4.66.0
+
+# 文档处理
 PyMuPDF>=1.23.0
+mineru[core]>=0.2.0
+
+# 向量数据库
+chromadb>=0.4.0
+
+# 其他工具
+typing-extensions>=4.0.0
+pathlib>=1.0.0
